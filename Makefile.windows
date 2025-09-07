@@ -1,0 +1,94 @@
+# ScribbleTune02 - AI Music Generation
+# Windows-compatible Makefile (requires make for Windows or use the .ps1 scripts)
+
+.PHONY: help install dev build preview clean test lint format docker-build docker-up docker-down docker-logs
+
+# Default target
+help: ## Show this help message
+	@echo ScribbleTune02 - AI Music Generation
+	@echo ====================================
+	@echo.
+	@echo Available commands:
+	@echo   install      Install all dependencies
+	@echo   dev          Start development server
+	@echo   build        Build for production
+	@echo   preview      Preview production build
+	@echo   clean        Clean build artifacts and node_modules
+	@echo   docker-build Build Docker image
+	@echo   docker-up    Start Docker containers
+	@echo   docker-down  Stop Docker containers
+	@echo   docker-logs  Show Docker logs
+	@echo   generate     Generate music (requires dev server running)
+	@echo   config       Open configuration in browser
+	@echo   health       Check if server is running
+	@echo   setup        Complete project setup
+
+# Development commands
+install: ## Install all dependencies
+	@echo 📦 Installing dependencies...
+	cd frontend && npm install
+	@echo ✅ Dependencies installed!
+
+dev: ## Start development server
+	@echo 🚀 Starting development server...
+	cd frontend && npm run dev
+
+build: ## Build for production
+	@echo 🔨 Building for production...
+	cd frontend && npm run build
+	@echo ✅ Build complete!
+
+preview: ## Preview production build
+	@echo 👀 Starting preview server...
+	cd frontend && npm run preview
+
+# Cleanup
+clean: ## Clean build artifacts and node_modules
+	@echo 🧹 Cleaning up...
+	rmdir /s /q frontend\dist 2>nul || echo.
+	rmdir /s /q frontend\node_modules 2>nul || echo.
+	rmdir /s /q frontend\.svelte-kit 2>nul || echo.
+	rmdir /s /q frontend\build 2>nul || echo.
+	@echo ✅ Cleanup complete!
+
+# Docker commands
+docker-build: ## Build Docker image
+	@echo 🐳 Building Docker image...
+	docker build -t scribbletune02 -f frontend/Dockerfile frontend/
+	@echo ✅ Docker image built!
+
+docker-up: ## Start Docker containers
+	@echo 🐳 Starting Docker containers...
+	docker-compose up -d
+	@echo ✅ Containers started!
+
+docker-down: ## Stop Docker containers
+	@echo 🐳 Stopping Docker containers...
+	docker-compose down
+	@echo ✅ Containers stopped!
+
+docker-logs: ## Show Docker logs
+	@echo 📋 Showing Docker logs...
+	docker-compose logs -f
+
+# Music generation
+generate: ## Generate music (requires dev server running)
+	@echo 🎵 Generating music...
+	curl -X POST http://localhost:3002/api/generate
+	@echo ✅ Music generation complete!
+
+# Database/Config
+config: ## Open configuration in browser
+	@echo ⚙️ Opening configuration...
+	@echo Visit: http://localhost:3002/config
+
+# Health check
+health: ## Check if server is running
+	@echo 🏥 Checking server health...
+	curl -s http://localhost:3002/api/health || echo ❌ Server not running
+
+# Full setup
+setup: install ## Complete project setup
+	@echo 🎵 ScribbleTune02 setup complete!
+	@echo Run 'make dev' to start the development server
+	@echo Visit http://localhost:3002 to use the application
