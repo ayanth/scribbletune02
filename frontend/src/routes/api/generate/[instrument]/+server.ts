@@ -1,11 +1,20 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { MusicGenerator } from '$lib/generators/music-generator';
+import { loadConfig } from '$lib/config';
 
 export const POST: RequestHandler = async ({ params }) => {
   try {
     const { instrument } = params;
-    const generator = new MusicGenerator();
+    // Load current configuration from db.json
+    const currentConfig = loadConfig();
+    const generator = new MusicGenerator({
+      outputDir: currentConfig.generation.outputDir,
+      bpm: currentConfig.generation.bpm,
+      bars: currentConfig.generation.bars,
+      chordProgression: currentConfig.chordProgression,
+      drumConfig: currentConfig.drum
+    });
     
     // Validate instrument name
     const validInstruments = ['kick', 'snare', 'closedHat', 'openHat', 'crash', 'tomFill', 'bass', 'chordsPads', 'chordsPlucks', 'arp', 'lead', 'fxCrash'];

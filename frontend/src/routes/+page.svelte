@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { slide } from 'svelte/transition';
 	import type { AppConfig } from '$lib/config';
 	
 	let isConnected: boolean = false;
@@ -10,11 +11,42 @@
 	let config: AppConfig | null = null;
 	let loading: boolean = true;
 	let saving: boolean = false;
-	let success: string | null = null;
 	let progressionType: string = 'common';
 	let customProgression: string = '';
 	let progressionError: string | null = null;
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+	
+	// Accordion state - all sections closed by default
+	let openSections: string[] = [];
+	
+	// Toggle accordion section
+	function toggleSection(sectionName: string) {
+		// Force reactivity by creating a new array
+		const newOpenSections = [...openSections];
+		
+		if (newOpenSections.includes(sectionName)) {
+			// Remove the section
+			const index = newOpenSections.indexOf(sectionName);
+			newOpenSections.splice(index, 1);
+		} else {
+			// Add the section
+			newOpenSections.push(sectionName);
+		}
+		
+		openSections = newOpenSections;
+	}
+	
+	// Check if section is open
+	function isSectionOpen(sectionName: string): boolean {
+		return openSections.includes(sectionName);
+	}
+	
+	// Create reactive derived values for each section
+	$: drumsOpen = openSections.includes('Drums');
+	$: bassOpen = openSections.includes('Bass');
+	$: chordsOpen = openSections.includes('Chords');
+	$: melodicOpen = openSections.includes('Melodic');
+	$: effectsOpen = openSections.includes('Effects');
 
 	// Common chord progressions
 	const commonProgressions = [
@@ -141,13 +173,7 @@
 			}
 			
 			const result = await response.json();
-			success = 'Configuration saved successfully';
 			console.log('Configuration saved:', result);
-			
-			// Clear success message after 3 seconds
-			setTimeout(() => {
-				success = null;
-			}, 3000);
 		} catch (err) {
 			error = (err as Error).message;
 			console.error('Error saving configuration:', err);
@@ -371,11 +397,6 @@
 			</div>
 		{/if}
 
-		{#if success}
-			<div class="success">
-				<p>✅ {success}</p>
-			</div>
-		{/if}
 
 		{#if musicData}
 			<div class="success">
@@ -540,8 +561,22 @@
 		<!-- Instrument Categories -->
 		{#each instrumentCategories as category}
 			<section class="instrument-category">
-				<h2>{category.icon} {category.name}</h2>
-				<div class="instruments-grid">
+				<button 
+					class="category-header" 
+					on:click={() => toggleSection(category.name)}
+					class:open={category.name === 'Drums' ? drumsOpen : category.name === 'Bass' ? bassOpen : category.name === 'Chords' ? chordsOpen : category.name === 'Melodic' ? melodicOpen : effectsOpen}
+				>
+					<span class="category-title">
+						<span class="category-icon">{category.icon}</span>
+						{category.name}
+					</span>
+					<span class="accordion-arrow" class:rotated={category.name === 'Drums' ? drumsOpen : category.name === 'Bass' ? bassOpen : category.name === 'Chords' ? chordsOpen : category.name === 'Melodic' ? melodicOpen : effectsOpen}>
+						▼
+					</span>
+				</button>
+				
+				{#if category.name === 'Drums' ? drumsOpen : category.name === 'Bass' ? bassOpen : category.name === 'Chords' ? chordsOpen : category.name === 'Melodic' ? melodicOpen : effectsOpen}
+					<div class="instruments-grid" transition:slide>
 					{#each category.instruments as instrument}
 						<div class="instrument-block">
 							<div class="instrument-header">
@@ -657,7 +692,8 @@
 							</div>
 						</div>
 					{/each}
-				</div>
+					</div>
+				{/if}
 			</section>
 		{/each}
 	{/if}
@@ -910,20 +946,61 @@
 	}
 
 	.instrument-category {
-		margin-bottom: 3rem;
+		margin-bottom: 1rem;
+		border: 1px solid #333;
+		border-radius: 8px;
+		overflow: hidden;
 	}
-
-	.instrument-category h2 {
-		font-size: 2rem;
-		margin-bottom: 2rem;
-		color: #333;
-		text-align: center;
+	
+	.category-header {
+		width: 100%;
+		background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+		border: none;
+		padding: 1rem 1.5rem;
+		cursor: pointer;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		transition: all 0.3s ease;
+	}
+	
+	.category-header:hover {
+		background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+	}
+	
+	.category-header.open {
+		background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+	}
+	
+	.category-title {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: #e0e0e0;
+	}
+	
+	.category-icon {
+		font-size: 1.8rem;
+	}
+	
+	.accordion-arrow {
+		font-size: 1.2rem;
+		color: #888;
+		transition: transform 0.3s ease;
+	}
+	
+	.accordion-arrow.rotated {
+		transform: rotate(180deg);
 	}
 
 	.instruments-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 		gap: 2rem;
+		padding: 1.5rem;
+		background: #1a1a1a;
 	}
 
 	.instrument-block {

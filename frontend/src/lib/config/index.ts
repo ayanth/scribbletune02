@@ -82,15 +82,31 @@ export interface DevelopmentConfig {
  * Load configuration from JSON file
  */
 export function loadConfig(): AppConfig {
-  console.log('Loading configuration...');
-  
-  // For now, just return the fallback configuration to get the app working
-  // We can debug the file loading later
-  const fallbackConfig: AppConfig = {
+  try {
+    // Try to read the config file from the Docker container path
+    const configPath = '/app/db.json';
+    
+    if (fs.existsSync(configPath)) {
+      const configData = fs.readFileSync(configPath, 'utf8');
+      const config = JSON.parse(configData);
+      console.log('Loaded configuration from file');
+      return config;
+    } else {
+      console.log('Config file not found, using fallback');
+      return getFallbackConfig();
+    }
+  } catch (error) {
+    console.error('Error loading config, using fallback:', error);
+    return getFallbackConfig();
+  }
+}
+
+function getFallbackConfig(): AppConfig {
+  return {
     generation: {
       bpm: 110,
       bars: 4,
-      outputDir: 'duo/full/'
+      outputDir: 'duo/full'
     },
     drum: {
       kick: 'C1',
@@ -137,9 +153,6 @@ export function loadConfig(): AppConfig {
       arp: '05_arp.mid', lead: '06_lead.mid', fxCrash: '07_fx_crash.mid'
     }
   };
-  
-  console.log('Using fallback configuration');
-  return fallbackConfig;
 }
 
 /**
@@ -147,34 +160,8 @@ export function loadConfig(): AppConfig {
  */
 export function saveConfig(config: AppConfig): void {
   try {
-    // Try multiple possible paths for the config file
-    const possiblePaths = [
-      path.join(process.cwd(), 'db.json'),
-      path.join(process.cwd(), 'frontend', 'db.json'),
-      path.join(process.cwd(), '..', 'db.json'),
-      './db.json',
-      '../db.json'
-    ];
-    
-    let configPath: string | null = null;
-    
-    // First, try to find existing config file
-    for (const possiblePath of possiblePaths) {
-      try {
-        if (fs.existsSync(possiblePath)) {
-          configPath = possiblePath;
-          break;
-        }
-      } catch (err) {
-        // Continue to next path
-        continue;
-      }
-    }
-    
-    // If no existing config found, use the first path
-    if (!configPath) {
-      configPath = possiblePaths[0];
-    }
+    // Use the Docker container path
+    const configPath = '/app/db.json';
     
     const configData = JSON.stringify(config, null, 2);
     fs.writeFileSync(configPath, configData, 'utf8');

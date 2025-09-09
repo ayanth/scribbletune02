@@ -25,7 +25,12 @@ export class MusicGenerator {
 
   constructor(customConfig?: Partial<GenerationConfig>) {
     // Use environment config as base, then override with custom config
-    this.config = { ...config.generation, ...customConfig };
+    this.config = { 
+      ...config.generation, 
+      chordProgression: config.chordProgression,
+      drumConfig: config.drum,
+      ...customConfig 
+    };
     this.initializeGenerators();
   }
 

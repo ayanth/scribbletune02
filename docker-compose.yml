@@ -16,6 +16,10 @@ services:
       - ./db.json:/app/db.json
       # Mount frontend source for live development
       - ./frontend/src:/app/src
+      # Ensure output directory is accessible from host
+      - ./duo/full:/app/duo/full
+      # Mount the new output directory
+      - ./asd:/app/asd
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]

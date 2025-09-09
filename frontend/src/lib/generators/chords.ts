@@ -18,6 +18,43 @@ export class ChordGenerator {
   constructor(config: GenerationConfig) {
     this.config = config;
     this.chordProgression = config.chordProgression;
+    
+    // Generate chords from progression if not already populated
+    if (!this.chordProgression.chords || this.chordProgression.chords.length === 0) {
+      this.chordProgression.chords = this.generateChordsFromProgression();
+    }
+  }
+
+  /**
+   * Generate chord names from progression string
+   */
+  private generateChordsFromProgression(): string[] {
+    const progression = this.chordProgression.progression;
+    const scaleKey = this.chordProgression.scaleKey;
+    
+    // Simple chord mapping for C minor scale
+    const chordMap: { [key: string]: string } = {
+      'I': 'Cm',
+      'i': 'Cm',
+      'II': 'Ddim',
+      'ii': 'Ddim',
+      'III': 'Eb',
+      'iii': 'Eb',
+      'IV': 'Fm',
+      'iv': 'Fm',
+      'V': 'Gm',
+      'v': 'Gm',
+      'VI': 'Ab',
+      'vi': 'Ab',
+      'VII': 'Bb',
+      'vii': 'Bb',
+      'bVII': 'Bb',
+      'bVI': 'Ab'
+    };
+    
+    // Split progression and map to chords
+    const progressionParts = progression.split(' ').filter(part => part.trim() !== '');
+    return progressionParts.map(part => chordMap[part] || part);
   }
 
   /**
